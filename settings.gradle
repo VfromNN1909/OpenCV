@@ -1,0 +1,3 @@
+rootProject.name = "KotlinOpenCV"
+include ':app'
+include ':opencv'
