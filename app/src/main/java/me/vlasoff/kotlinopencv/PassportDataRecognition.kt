@@ -1,16 +1,9 @@
 package me.vlasoff.kotlinopencv
 
-import android.Manifest
-import android.app.Activity
 import android.content.Context
-import android.content.pm.PackageManager
 import android.graphics.Bitmap
-import android.os.Build
 import android.os.Environment
 import android.util.Log
-import androidx.activity.result.ActivityResultLauncher
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import com.googlecode.tesseract.android.TessBaseAPI
 import org.opencv.android.Utils
 import org.opencv.core.CvType
@@ -37,44 +30,39 @@ class PassportDataRecognition(
     private var writePermissionGranted = false
 //    private lateinit var permissionsLauncher: ActivityResultLauncher<Array<String>>
 
-    private val isExternalStorageReadOnly: Boolean
-        get() = Environment.MEDIA_MOUNTED_READ_ONLY == Environment.getExternalStorageState()
-
-    private val isExternalStorageAvailable: Boolean
-        get() = Environment.MEDIA_MOUNTED == Environment.getExternalStorageState()
-
 
     fun getData(): String {
+        TessDataManager.initTessTrainedData(context)
         val image = Utils.loadResource(
             context,
-            R.drawable.main_page_test_1,
+            R.drawable.test3,
             CvType.CV_8UC4
         )
 
-        val gray = Mat()
-        Imgproc.cvtColor(image, gray, Imgproc.COLOR_BGR2GRAY)
-
-        val target = Mat()
-        Imgproc.adaptiveThreshold(
-            gray,
-            target,
-            255.0,
-            Imgproc.ADAPTIVE_THRESH_MEAN_C,
-            Imgproc.THRESH_BINARY,
-            15,
-            40.0
-        )
+//        val gray = Mat()
+//        Imgproc.cvtColor(image, gray, Imgproc.COLOR_BGR2GRAY)
+//
+//        val target = Mat()
+//        Imgproc.adaptiveThreshold(
+//            gray,
+//            target,
+//            255.0,
+//            Imgproc.ADAPTIVE_THRESH_MEAN_C,
+//            Imgproc.THRESH_BINARY,
+//            15,
+//            40.0
+//        )
         return try {
             val bitmap = Bitmap.createBitmap(image.width(), image.height(), Bitmap.Config.ARGB_8888)
-            Utils.matToBitmap(target, bitmap)
+            Utils.matToBitmap(image, bitmap)
             val api = TessBaseAPI()
             api.apply {
-                init(assetsToExternal(context, FILE_PATH, FILE_NAME), "eng")
-                pageSegMode = TessBaseAPI.PageSegMode.PSM_SPARSE_TEXT
-                setVariable(
-                    TessBaseAPI.VAR_CHAR_WHITELIST,
-                    ",.0123456789<>ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
-                )
+                init("/data/data/me.vlasoff.kotlinopencv/files/tesseract", "eng")
+                pageSegMode = TessBaseAPI.PageSegMode.PSM_AUTO_ONLY
+//                setVariable(
+//                    TessBaseAPI.VAR_CHAR_WHITELIST,
+//                    ",.0123456789<>ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+//                )
                 setImage(bitmap)
             }
             Log.d(SUCCESS, api.utF8Text)
@@ -85,6 +73,10 @@ class PassportDataRecognition(
             ""
         }
 
+//        val bitmap = Bitmap.createBitmap(image.width(), image.height(), Bitmap.Config.ARGB_8888)
+//        Utils.matToBitmap(target, bitmap)
+
+//        return PassportAnalyzer().runTextRecognition(context)
     }
 
 

@@ -1,6 +1,7 @@
 package me.vlasoff.kotlinopencv
 
-import android.Manifest
+import android.Manifest.permission.READ_EXTERNAL_STORAGE
+import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
@@ -13,6 +14,7 @@ import org.opencv.android.BaseLoaderCallback
 import org.opencv.android.LoaderCallbackInterface
 import org.opencv.android.OpenCVLoader
 
+
 class MainActivity : AppCompatActivity() {
 
     private val binding: ActivityMainBinding by lazy {
@@ -24,7 +26,7 @@ class MainActivity : AppCompatActivity() {
         const val EXTERNAL_STORAGE_PERMISSION_CODE = 23
     }
 
-    val callback = object : BaseLoaderCallback(this) {
+    private val callback = object : BaseLoaderCallback(this) {
         override fun onManagerConnected(status: Int) {
             when (status) {
                 LoaderCallbackInterface.SUCCESS -> {
@@ -32,15 +34,12 @@ class MainActivity : AppCompatActivity() {
                 }
                 else -> super.onManagerConnected(status)
             }
-
         }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
-        requestPermissions()
 
         if (!OpenCVLoader.initDebug()) {
             Log.d(
@@ -57,16 +56,34 @@ class MainActivity : AppCompatActivity() {
         OpenCVLoader.initDebug()
         Toast.makeText(this, "OpenCV loaded successfully!", Toast.LENGTH_SHORT).show()
 
+//        if (ContextCompat.checkSelfPermission(
+//                this,
+//                WRITE_EXTERNAL_STORAGE
+//            ) != PackageManager.PERMISSION_GRANTED ||
+//            ContextCompat.checkSelfPermission(
+//                this,
+//                READ_EXTERNAL_STORAGE
+//            ) != PackageManager.PERMISSION_GRANTED
+//        ) {
+//            ActivityCompat.requestPermissions(
+//                this,
+//                arrayOf(WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE),
+//                100
+//            )
+//        } else {
+//            val detector = PassportDataRecognition(this)
+//            val data = detector.getData()
+//            binding.tvPassportText.text = data
+//            Log.i("TESSERACT_TAG", data)
+//        }
+//
 
-        val detector = PassportDataRecognition(this)
-        val data = detector.getData()
-        binding.tvPassportText.text = data
 
 //        PassportMatchingSecondTry.detect(this)
 
-
-//        val data = PassportDataRecognition(this).getData()
-//        binding.tvPassportText.text = data
+        PassportRecognitionThirdTry.detect(this)
+        val data = PassportDataRecognition(this).getData()
+        binding.tvPassportText.text = data
     }
 
 //    private fun checkForPermissions() {
@@ -90,17 +107,4 @@ class MainActivity : AppCompatActivity() {
 //        }
 //    }
 
-    private fun requestPermissions(): Boolean {
-        var request = true
-        val permissions = arrayOf(
-            Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE
-        )
-        return if (permissions.isNotEmpty()) {
-            ActivityCompat.requestPermissions(this, permissions, 102)
-            true
-        } else {
-            false
-        }
-    }
 }

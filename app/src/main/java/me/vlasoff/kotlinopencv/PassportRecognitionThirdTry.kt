@@ -3,6 +3,7 @@ package me.vlasoff.kotlinopencv
 import android.content.Context
 import android.widget.Toast
 import org.opencv.android.Utils
+import org.opencv.calib3d.Calib3d
 import org.opencv.core.*
 import org.opencv.features2d.DescriptorMatcher
 import org.opencv.features2d.ORB
@@ -14,11 +15,12 @@ object PassportRecognitionThirdTry {
     fun detect(context: Context) {
 
         val orb = ORB.create()
-        val matcher = DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE_HAMMING)
+        val matcher = DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE_SL2)
 
         // firstImage
-        val img1 =
-            Utils.loadResource(context, R.drawable.main_page_template, CvType.CV_8UC4)
+        var img1 =
+            Utils.loadResource(context, R.drawable.registration_single_page, CvType.CV_8UC4)
+        img1 = addGrayscale(img1)
         val descriptors1 = Mat()
         val keyPoints1 = MatOfKeyPoint()
 
@@ -26,7 +28,8 @@ object PassportRecognitionThirdTry {
         orb.compute(img1, keyPoints1, descriptors1)
 
         // second image
-        val img2 = Utils.loadResource(context, R.drawable.test3, CvType.CV_8UC4)
+        var img2 = Utils.loadResource(context, R.drawable.registration_page_test_1, CvType.CV_8UC4)
+        img2 = addGrayscale(img2)
         val descriptors2 = Mat()
         val keyPoints2 = MatOfKeyPoint()
 
@@ -40,10 +43,12 @@ object PassportRecognitionThirdTry {
         val iterator: Iterator<MatOfDMatch> = matches.iterator()
         while (iterator.hasNext()) {
             val matOfDMatch = iterator.next()
-            if (matOfDMatch.toArray()[0].distance < 0.8f * matOfDMatch.toArray()[1].distance) {
+            if (matOfDMatch.toArray()[0].distance < 0.7f * matOfDMatch.toArray()[1].distance) {
                 goodMatches.add(matOfDMatch.toArray()[0])
             }
         }
+
+//        val dist = Core.norm(img1, img2)
 
 //        val pts1 = mutableListOf<Point>()
 //        val pts2 = mutableListOf<Point>()
@@ -70,5 +75,6 @@ object PassportRecognitionThirdTry {
 
 
         Toast.makeText(context, goodMatches.size.toString(), Toast.LENGTH_SHORT).show()
+//        Toast.makeText(context, dist.toString(), Toast.LENGTH_LONG).show()
     }
 }

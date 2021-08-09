@@ -3,27 +3,29 @@ package me.vlasoff.kotlinopencv
 import android.content.Context
 import android.widget.Toast
 import org.opencv.android.Utils
-import org.opencv.core.CvType
+import org.opencv.core.*
+import org.opencv.features2d.DescriptorMatcher
+import org.opencv.features2d.SIFT
 
 
 object PassportMatchingSecondTry {
 //    private const val TAG = "MATCHING"
-//    private const val SUCCESS = "PASSPORT DETECTED"
-//    private const val FAIL = "PASSPORT NOT FOUND"
-//
-//
+    private const val SUCCESS = "PASSPORT DETECTED"
+    private const val FAIL = "PASSPORT NOT FOUND"
+
+
 //    fun detect(context: Context) {
 //        Toast.makeText(context, "Detection start!", Toast.LENGTH_SHORT).show()
 //        val img1 = Utils.loadResource(context, R.drawable.main_page_template, CvType.CV_8UC4)
 //        val img2 = Utils.loadResource(context, R.drawable.cat, CvType.CV_8UC4)
 //
-//        val hessianThreshold = 400.0
+//        val hessianThreshold = 400
 //        val nOctaves = 4
 //        val nOctaveLayers = 3
 //        val extended = false
 //        val upright = false
-//        val detector: SURF =
-//            SURF.create(hessianThreshold, nOctaves, nOctaveLayers, extended, upright)
+//        val detector: SIFT =
+//            SIFT.create(hessianThreshold, nOctaves, nOctaveLayers, extended, upright)
 //        val keypoints1 = MatOfKeyPoint()
 //        val keypoints2 = MatOfKeyPoint()
 //        val descriptors1 = Mat()
