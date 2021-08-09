@@ -35,13 +35,13 @@ class PassportDataRecognition(
         TessDataManager.initTessTrainedData(context)
         val image = Utils.loadResource(
             context,
-            R.drawable.test3,
+            R.drawable.test5,
             CvType.CV_8UC4
         )
 
-//        val gray = Mat()
-//        Imgproc.cvtColor(image, gray, Imgproc.COLOR_BGR2GRAY)
-//
+        val gray = Mat()
+        Imgproc.cvtColor(image, gray, Imgproc.COLOR_BGR2GRAY)
+
 //        val target = Mat()
 //        Imgproc.adaptiveThreshold(
 //            gray,
@@ -54,15 +54,15 @@ class PassportDataRecognition(
 //        )
         return try {
             val bitmap = Bitmap.createBitmap(image.width(), image.height(), Bitmap.Config.ARGB_8888)
-            Utils.matToBitmap(image, bitmap)
+            Utils.matToBitmap(gray, bitmap)
             val api = TessBaseAPI()
             api.apply {
                 init("/data/data/me.vlasoff.kotlinopencv/files/tesseract", "eng")
                 pageSegMode = TessBaseAPI.PageSegMode.PSM_AUTO_ONLY
-//                setVariable(
-//                    TessBaseAPI.VAR_CHAR_WHITELIST,
-//                    ",.0123456789<>ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
-//                )
+                setVariable(
+                    TessBaseAPI.VAR_CHAR_WHITELIST,
+                    ",.0123456789<>ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+                )
                 setImage(bitmap)
             }
             Log.d(SUCCESS, api.utF8Text)
