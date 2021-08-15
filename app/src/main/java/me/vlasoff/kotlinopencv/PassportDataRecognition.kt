@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.os.Environment
 import android.util.Log
+import android.widget.Toast
 import com.googlecode.tesseract.android.TessBaseAPI
 import org.opencv.android.Utils
 import org.opencv.core.CvType
@@ -23,7 +24,7 @@ class PassportDataRecognition(
             Environment.getExternalStorageDirectory().absolutePath + File.separator + "TessData" + File.separator + "tessdata" + File.separator
 
         const val FILE_NAME = "tessdata/eng.traineddata"
-
+        const val PATH_TO_TRAINED_DATA = "/data/data/me.vlasoff.kotlinopencv/files/tesseract"
     }
 
     private var readPermissionGranted = false
@@ -33,14 +34,16 @@ class PassportDataRecognition(
 
     fun getData(): String {
         TessDataManager.initTessTrainedData(context)
-        val image = Utils.loadResource(
+        var image = Utils.loadResource(
             context,
-            R.drawable.test5,
+            R.drawable.main_page_test_1,
             CvType.CV_8UC4
         )
 
-        val gray = Mat()
-        Imgproc.cvtColor(image, gray, Imgproc.COLOR_BGR2GRAY)
+        image = detectMRZ(image)
+
+//        val gray = Mat()
+//        Imgproc.cvtColor(image, gray, Imgproc.COLOR_BGR2GRAY)
 
 //        val target = Mat()
 //        Imgproc.adaptiveThreshold(
@@ -54,10 +57,10 @@ class PassportDataRecognition(
 //        )
         return try {
             val bitmap = Bitmap.createBitmap(image.width(), image.height(), Bitmap.Config.ARGB_8888)
-            Utils.matToBitmap(gray, bitmap)
+            Utils.matToBitmap(image, bitmap)
             val api = TessBaseAPI()
             api.apply {
-                init("/data/data/me.vlasoff.kotlinopencv/files/tesseract", "eng")
+                init(PATH_TO_TRAINED_DATA, "eng")
                 pageSegMode = TessBaseAPI.PageSegMode.PSM_AUTO_ONLY
                 setVariable(
                     TessBaseAPI.VAR_CHAR_WHITELIST,
@@ -65,8 +68,9 @@ class PassportDataRecognition(
                 )
                 setImage(bitmap)
             }
-            Log.d(SUCCESS, api.utF8Text)
-            api.utF8Text
+            val text = api.utF8Text
+            Toast.makeText(context, text, Toast.LENGTH_LONG).show()
+            text
 
         } catch (ex: Exception) {
             Log.e(ERROR, ex.message.toString())

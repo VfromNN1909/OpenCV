@@ -1,18 +1,22 @@
 package me.vlasoff.kotlinopencv
 
-import android.Manifest.permission.READ_EXTERNAL_STORAGE
-import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
-import android.content.pm.PackageManager
+import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import me.vlasoff.kotlinopencv.databinding.ActivityMainBinding
 import org.opencv.android.BaseLoaderCallback
 import org.opencv.android.LoaderCallbackInterface
 import org.opencv.android.OpenCVLoader
+import java.io.File
+import java.io.FileInputStream
 
 
 class MainActivity : AppCompatActivity() {
@@ -24,6 +28,8 @@ class MainActivity : AppCompatActivity() {
     companion object {
         const val TAG = "OPENCV_TAG"
         const val EXTERNAL_STORAGE_PERMISSION_CODE = 23
+        const val CALLBACKS = "dbg_callbacks"
+        const val REQUEST_CODE = 99
     }
 
     private val callback = object : BaseLoaderCallback(this) {
@@ -39,7 +45,8 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(binding.root)
+        Log.i(CALLBACKS, "onCreate: ")
 
         if (!OpenCVLoader.initDebug()) {
             Log.d(
@@ -52,59 +59,77 @@ class MainActivity : AppCompatActivity() {
             callback.onManagerConnected(LoaderCallbackInterface.SUCCESS)
         }
 
+
+        FaceDetection.loadModel(this)
+//        detectFaces(BitmapFactory.decodeResource(this.resources, R.drawable.selfie2))
+
+//        PassportRecognition.detect(this)
+
 //        // add opencv functionality
         OpenCVLoader.initDebug()
-        Toast.makeText(this, "OpenCV loaded successfully!", Toast.LENGTH_SHORT).show()
 
-//        if (ContextCompat.checkSelfPermission(
-//                this,
-//                WRITE_EXTERNAL_STORAGE
-//            ) != PackageManager.PERMISSION_GRANTED ||
-//            ContextCompat.checkSelfPermission(
-//                this,
-//                READ_EXTERNAL_STORAGE
-//            ) != PackageManager.PERMISSION_GRANTED
-//        ) {
-//            ActivityCompat.requestPermissions(
-//                this,
-//                arrayOf(WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE),
-//                100
-//            )
-//        } else {
-//            val detector = PassportDataRecognition(this)
-//            val data = detector.getData()
-//            binding.tvPassportText.text = data
-//            Log.i("TESSERACT_TAG", data)
-//        }
-//
+        val imagePath = intent.getStringExtra("image_type")
+        if (imagePath != null){
+            val bitmap = getBitmap(imagePath)
+        } else
+            Toast.makeText(this, "Image was not found", Toast.LENGTH_SHORT).show()
 
 
-//        PassportMatchingSecondTry.detect(this)
-
-        PassportRecognitionThirdTry.detect(this)
-        val data = PassportDataRecognition(this).getData()
-        binding.tvPassportText.text = data
+        binding.ivPhoto.setOnClickListener {
+            Toast.makeText(this, "Clicked!", Toast.LENGTH_SHORT).show()
+            val intent = Intent(this, AppScanActivity::class.java)
+            startActivity(intent)
+        }
     }
 
-//    private fun checkForPermissions() {
-//        if (ContextCompat.checkSelfPermission(
-//                this,
-//                Manifest.permission.WRITE_EXTERNAL_STORAGE
-//            ) != PackageManager.PERMISSION_GRANTED) {
-//            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-//                    Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-//
-//                Log.i(TAG,"Unexpected flow");
-//            } else {
-//                ActivityCompat.requestPermissions(this,
-//                    arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
-//                    EXTERNAL_STORAGE_PERMISSION_CODE)
-//            }
-//        } else {
-//            val detector = PassportDataRecognition(this)
-//            val data = detector.getData()
-//            binding.tvPassportText.text = data
-//        }
+    private fun detectFaces(image: Bitmap) {
+        lifecycleScope.launch {
+            val numberOfFaces = FaceDetection.detectFaces(image).toString()
+            runOnUiThread {
+                Toast.makeText(this@MainActivity, "Лица: $numberOfFaces", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    private fun saveCheckboxState(type: PassportImageType, state: Boolean) =
+        PassportUtils(this).save(type.page, state)
+
+    override fun onRestart() {
+        super.onRestart()
+        Log.i(CALLBACKS, "onRestart: ")
+    }
+
+    override fun onResume() {
+        super.onResume()
+        Log.i(CALLBACKS, "onResume: ")
+        when (intent.getStringExtra("type") ?: "") {
+            "main" -> binding.checkBoxMainPage.isChecked = true
+            "registration" -> binding.checkBoxRegistrationPage.isChecked = true
+            "none" -> binding.checkBoxSelfie.isChecked = true
+            else -> {
+            }
+        }
+    }
+
+//    private fun recognize() = lifecycleScope.launch(Dispatchers.IO) {
+//        val drawable = binding.ivPhoto.drawable
+//        val faces =
+//            async(Dispatchers.IO) { FaceDetection.detectFaces(image) }.await()
+//        Log.d("faces", "F: $faces")
 //    }
+
+    private fun getBitmap(path: String?): Bitmap? {
+        var bitmap: Bitmap? = null
+        try {
+            val f = File(path)
+            val options = BitmapFactory.Options()
+            options.inPreferredConfig = Bitmap.Config.ARGB_8888
+            bitmap = BitmapFactory.decodeStream(FileInputStream(f), null, options)
+            binding.ivPhoto.setImageBitmap(bitmap)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return bitmap
+    }
 
 }
