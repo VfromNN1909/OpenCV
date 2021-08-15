@@ -21,7 +21,7 @@ object FaceDetection {
 
     private val scope = CoroutineScope(Job() + Dispatchers.IO)
 
-    private const val faceModel = "haarcascade_frontalface_default.xml"
+    private const val faceModel = "haarcascade_frontalface_alt.xml"
 
     private lateinit var faceCascade: CascadeClassifier
 
@@ -34,7 +34,8 @@ object FaceDetection {
         )
     }
 
-    suspend fun detectFaces(image: Bitmap): Int {
+    fun detectFaces(image: Bitmap): Int {
+
         var size: Int = 0
         scope.launch {
             val frame = Mat()
@@ -53,7 +54,7 @@ object FaceDetection {
                 }
             }
             faceCascade.detectMultiScale(
-                grayFrame, faces, 1.1, 2, 0 or Objdetect.CASCADE_SCALE_IMAGE,
+                grayFrame, faces, 1.1, 3, Objdetect.CASCADE_SCALE_IMAGE,
                 Size(absoluteFaceSize.toDouble(), absoluteFaceSize.toDouble()), Size()
             )
             size = faces.toArray().size

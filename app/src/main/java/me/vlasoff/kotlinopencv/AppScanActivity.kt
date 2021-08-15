@@ -34,11 +34,13 @@ class AppScanActivity : ScanActivity() {
     override fun onSuccess(scannerResults: ScannerResults) {
         val transformedImagePath = scannerResults.transformedImageFile?.path ?: ""
         val croppedImagePath = scannerResults.croppedImageFile?.path ?: ""
+        val originalImagePath = scannerResults.originalImageFile?.path ?: ""
         val intent = Intent(this, MainActivity::class.java).apply {
             if(transformedImagePath == "")
                 putExtra(IMAGE_TYPE, croppedImagePath)
             else
                 putExtra(IMAGE_TYPE, transformedImagePath)
+            putExtra("orig_img", originalImagePath)
         }
         startActivity(intent)
     }

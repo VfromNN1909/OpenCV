@@ -35,7 +35,8 @@
 
         <meta-data
             android:name="com.google.mlkit.vision.DEPENDENCIES"
-            android:value="text" />
+            android:value="face" />
+
     </application>
 
 </manifest>

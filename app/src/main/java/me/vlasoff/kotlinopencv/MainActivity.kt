@@ -9,12 +9,14 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import me.vlasoff.kotlinopencv.databinding.ActivityMainBinding
+import me.vlasoff.kotlinopencv.face_recognition.FaceDetect
 import org.opencv.android.BaseLoaderCallback
 import org.opencv.android.LoaderCallbackInterface
 import org.opencv.android.OpenCVLoader
+import org.opencv.android.Utils
+import org.opencv.core.Mat
 import java.io.File
 import java.io.FileInputStream
 
@@ -60,7 +62,6 @@ class MainActivity : AppCompatActivity() {
         }
 
 
-        FaceDetection.loadModel(this)
 //        detectFaces(BitmapFactory.decodeResource(this.resources, R.drawable.selfie2))
 
 //        PassportRecognition.detect(this)
@@ -69,8 +70,9 @@ class MainActivity : AppCompatActivity() {
         OpenCVLoader.initDebug()
 
         val imagePath = intent.getStringExtra("image_type")
-        if (imagePath != null){
+        if (imagePath != null) {
             val bitmap = getBitmap(imagePath)
+            bitmap?.let { recognize(it) }
         } else
             Toast.makeText(this, "Image was not found", Toast.LENGTH_SHORT).show()
 
@@ -82,33 +84,12 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun detectFaces(image: Bitmap) {
-        lifecycleScope.launch {
-            val numberOfFaces = FaceDetection.detectFaces(image).toString()
-            runOnUiThread {
-                Toast.makeText(this@MainActivity, "Лица: $numberOfFaces", Toast.LENGTH_LONG).show()
-            }
-        }
-    }
-
     private fun saveCheckboxState(type: PassportImageType, state: Boolean) =
         PassportUtils(this).save(type.page, state)
 
     override fun onRestart() {
         super.onRestart()
         Log.i(CALLBACKS, "onRestart: ")
-    }
-
-    override fun onResume() {
-        super.onResume()
-        Log.i(CALLBACKS, "onResume: ")
-        when (intent.getStringExtra("type") ?: "") {
-            "main" -> binding.checkBoxMainPage.isChecked = true
-            "registration" -> binding.checkBoxRegistrationPage.isChecked = true
-            "none" -> binding.checkBoxSelfie.isChecked = true
-            else -> {
-            }
-        }
     }
 
 //    private fun recognize() = lifecycleScope.launch(Dispatchers.IO) {
@@ -130,6 +111,26 @@ class MainActivity : AppCompatActivity() {
             e.printStackTrace()
         }
         return bitmap
+    }
+
+    private fun recognize(image: Bitmap) = lifecycleScope.launch(Dispatchers.IO) {
+        FaceDetection.loadModel(this@MainActivity)
+        val faces = FaceDetect.detectFaces(image).size
+//        Toast.makeText(this@MainActivity, "$faces", Toast.LENGTH_SHORT).show()
+
+        when (faces) {
+            0 -> {
+                runOnUiThread {
+                    binding.checkBoxRegistrationPage.isChecked = true
+                }
+            }
+            1 -> {
+                runOnUiThread { binding.checkBoxMainPage.isChecked = true }
+            }
+            else -> {
+                Log.i("faces_count", "$faces")
+            }
+        }
     }
 
 }

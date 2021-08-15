@@ -9,12 +9,7 @@ class MyApplication : Application() {
     override fun onCreate() {
         super.onCreate()
 
-        val config = DocumentScanner.Configuration().apply {
-            imageQuality = 100
-            imageSize = 1000000
-            imageType = Bitmap.CompressFormat.JPEG
-        }
-        DocumentScanner.init(this, config)
+        DocumentScanner.init(this)
     }
 
 }
