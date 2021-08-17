@@ -9,53 +9,52 @@ import org.opencv.calib3d.Calib3d
 import org.opencv.core.*
 import org.opencv.features2d.DescriptorMatcher
 import org.opencv.features2d.ORB
+import org.opencv.features2d.SIFT
 import java.util.*
 
 
 object PassportRecognition {
 
-    private val scope = CoroutineScope(Job() + Dispatchers.IO)
-
-    fun detect(context: Context, imageToRecognize: Bitmap): Int {
+    fun detect(context: Context, imageToRecognize: Bitmap, faces: Int): Int {
 
         var score: Int = 0
 
         val orb = ORB.create()
-        val matcher = DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE_SL2)
-
-
+        val matcher = DescriptorMatcher.create(DescriptorMatcher.FLANNBASED)
         // firstImage
-        var img1 =
-            Utils.loadResource(context, R.drawable.main_page_template, CvType.CV_8UC4)
-        scope.launch {
-            img1 = addGrayscale(img1)
-            val descriptors1 = Mat()
-            val keyPoints1 = MatOfKeyPoint()
-            orb.detect(img1, keyPoints1)
-            orb.compute(img1, keyPoints1, descriptors1)
+        var img1 = when (faces) {
+            0 -> Utils.loadResource(context, R.drawable.registration_single_page, CvType.CV_8UC4)
+            1 -> Utils.loadResource(context, R.drawable.main_page_template, CvType.CV_8UC4)
+            else -> Utils.loadResource(context, R.drawable.registration_single_page, CvType.CV_8UC4)
+        }
+        img1 = addGrayscale(img1)
+        val descriptors1 = Mat()
+        val keyPoints1 = MatOfKeyPoint()
+        orb.detect(img1, keyPoints1)
+        orb.compute(img1, keyPoints1, descriptors1)
 
-            // second image
-            var img2 = Mat()
-            val bmp32 = imageToRecognize.copy(Bitmap.Config.ARGB_8888, true)
-            Utils.bitmapToMat(bmp32, img2)
+        // second image
+        var img2 = Mat()
+        val bmp32 = imageToRecognize.copy(Bitmap.Config.ARGB_8888, true)
+        Utils.bitmapToMat(bmp32, img2)
 
-            img2 = addGrayscale(img2)
-            val descriptors2 = Mat()
-            val keyPoints2 = MatOfKeyPoint()
-            orb.detect(img2, keyPoints2)
-            orb.compute(img2, keyPoints2, descriptors2)
+        img2 = addGrayscale(img2)
+        val descriptors2 = Mat()
+        val keyPoints2 = MatOfKeyPoint()
+        orb.detect(img2, keyPoints2)
+        orb.compute(img2, keyPoints2, descriptors2)
 
-            val matches = mutableListOf<MatOfDMatch>()
-            matcher.knnMatch(descriptors1, descriptors2, matches, 5)
+        val matches = mutableListOf<MatOfDMatch>()
+        matcher.knnMatch(descriptors1, descriptors2, matches, 5)
 
-            val goodMatches = LinkedList<DMatch>()
-            val iterator: Iterator<MatOfDMatch> = matches.iterator()
-            while (iterator.hasNext()) {
-                val matOfDMatch = iterator.next()
-                if (matOfDMatch.toArray()[0].distance < 0.7f * matOfDMatch.toArray()[1].distance) {
-                    goodMatches.add(matOfDMatch.toArray()[0])
-                }
+        val goodMatches = LinkedList<DMatch>()
+        val iterator: Iterator<MatOfDMatch> = matches.iterator()
+        while (iterator.hasNext()) {
+            val matOfDMatch = iterator.next()
+            if (matOfDMatch.toArray()[0].distance < 0.7f * matOfDMatch.toArray()[1].distance) {
+                goodMatches.add(matOfDMatch.toArray()[0])
             }
+        }
 
 //        val dist = Core.norm(img1, img2)
 
@@ -82,11 +81,7 @@ object PassportRecognition {
 //            }
 //        }
 
-
-//        Toast.makeText(context, goodMatches.size.toString(), Toast.LENGTH_SHORT).show()
-//        Toast.makeText(context, dist.toString(), Toast.LENGTH_LONG).show()
-            score = goodMatches.size
-        }
+        score = goodMatches.size
 
         return score
     }

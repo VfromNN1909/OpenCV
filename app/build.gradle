@@ -99,5 +99,8 @@ dependencies {
 
     implementation('org.tensorflow:tensorflow-android:+')
 
+    api("space.kscience:kmath-core:0.3.0-dev-8")
+
+
 
 }

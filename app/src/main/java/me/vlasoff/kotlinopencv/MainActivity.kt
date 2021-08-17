@@ -116,19 +116,23 @@ class MainActivity : AppCompatActivity() {
     private fun recognize(image: Bitmap) = lifecycleScope.launch(Dispatchers.IO) {
         FaceDetection.loadModel(this@MainActivity)
         val faces = FaceDetect.detectFaces(image).size
+        val keypoints = PassportRecognition.detect(this@MainActivity, image, faces)
 //        Toast.makeText(this@MainActivity, "$faces", Toast.LENGTH_SHORT).show()
+        Log.i("keypoints", "Points: $keypoints, Faces: $faces")
 
         when (faces) {
             0 -> {
-                runOnUiThread {
-                    binding.checkBoxRegistrationPage.isChecked = true
+                if (keypoints >= 25) {
+                    runOnUiThread { binding.checkBoxRegistrationPage.isChecked = true }
                 }
+
             }
             1 -> {
-                runOnUiThread { binding.checkBoxMainPage.isChecked = true }
+                if (keypoints >= 25) {
+                    runOnUiThread { binding.checkBoxMainPage.isChecked = true }
+                }
             }
             else -> {
-                Log.i("faces_count", "$faces")
             }
         }
     }
