@@ -8,6 +8,8 @@ fun addGrayscale(image: Mat): Mat {
     val gray = Mat()
     Imgproc.cvtColor(image, gray, Imgproc.COLOR_BGR2GRAY)
 
+    Core.norm(gray)
+
     val target = Mat()
     Imgproc.adaptiveThreshold(
         gray,
